@@ -27,17 +27,3 @@ SO <- AddModuleScore(object = SO, features = Mg_cassette, name = "Mg_score")
 SO <- AddModuleScore(object = SO, features = ENaC_score, name = "ENaC_score")
 
 saveRDS(SO, here("CONTROL_DCT.rds"))
-
-# 3. AddModuleScore in all samples --------------------------------------------
-SO <- readRDS(here("ALL_DCT.rds"))
-
-SO <- AddModuleScore(object = SO, features = DCT_marker_gene_list, name = "DCT_score")
-SO <- AddModuleScore(object = SO, features = DCT1_marker_gene_list, name = "DCT1_score")
-SO <- AddModuleScore(object = SO, features = DCT2_marker_gene_list, name = "DCT2_score")
-SO <- AddModuleScore(object = SO, features = Ca_cassette, name = "Ca_score")
-SO <- AddModuleScore(object = SO, features = Mg_cassette, name = "Mg_score")
-SO <- AddModuleScore(object = SO, features = ENaC_score, name = "ENaC_score")
-
-saveRDS(SO, here("ALL_DCT.rds"))
-
-

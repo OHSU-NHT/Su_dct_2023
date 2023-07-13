@@ -12,49 +12,18 @@ SO <- readRDS(here("CONTROL_DCT.rds"))
 Idents(SO) <- "subclass.l1"
 
 # Calculate DEGs comparing DCT1 and DCT2 using test DESeq2
-DCT1vsDCT2_NK <- FindMarkers(SO, ident.1 = "DCT1", ident.2 = "DCT2", test.use = "DESeq2", verbose = TRUE)
+DCT1vsDCT2 <- FindMarkers(SO, ident.1 = "DCT1", ident.2 = "DCT2", test.use = "DESeq2", verbose = TRUE)
 
 # 2. Computing Proliferating cell DEGs in control samples ------------------------ 
-Prolif_NK <- FindMarkers(SO, ident.1 = "Prolif", ident.2 = c("DCT1", "DCT2"), test.use = "DESeq2", verbose = TRUE)
+Prolif <- FindMarkers(SO, ident.1 = "Prolif", ident.2 = c("DCT1", "DCT2"), test.use = "DESeq2", verbose = TRUE)
 
-# 3. Computing potassium-deficiency-induced DEGs ---------------------------------
-SO <- readRDS(here("ALL_DCT.rds"))
-Idents(SO) <- "analysis"
-
-# DCT1
-DCT1.kd <- FindMarkers(SO,
-                       ident.1 = "DCT1_KD",
-                       ident.2 = "DCT1_NK",
-                       test.use = "DESeq2",
-                       assay = "SCT",
-                       min.pct = 0.1,
-                       logfc.threshold = 0.3219)
-
-# DCT2
-DCT2.kd <- FindMarkers(SO,
-                       ident.1 = "DCT2_KD",
-                       ident.2 = "DCT2_NK",
-                       test.use = "DESeq2",
-                       assay = "SCT",
-                       min.pct = 0.1,
-                       logfc.threshold = 0.3219)
-
-# Proliferation population
-Prolif.kd <- FindMarkers(SO,
-                         ident.1 = "Prolif_KD",
-                         ident.2 = "Prolif_NK",
-                         test.use = "DESeq2",
-                         assay = "SCT",
-                         min.pct = 0.1,
-                         logfc.threshold = 0.3219)
-
-# 4. DEGs of DCT1 and DCT2 subpopulation in control samples ----------------------------------
+# 3. DEGs of DCT1 and DCT2 subpopulation in control samples ----------------------------------
 
 # Load CONTROL_DCT1 seurat object
 SO <- readRDS(here("CONTROL_DCT1.rds"))
 Idents(SO) <- "subclass.l2"
 
-DCT1a_NK <- FindMarkers(SO,
+DCT1a <- FindMarkers(SO,
                         ident.1 = "DCT1-A",
                         verbose = TRUE,
                         test.use = "DESeq2",
@@ -62,7 +31,7 @@ DCT1a_NK <- FindMarkers(SO,
                         min.pct = 0.1,
                         logfc.threshold = 0.3219)
 
-DCT1b_NK <- FindMarkers(SO,
+DCT1b <- FindMarkers(SO,
                         ident.1 = "DCT1-B",
                         verbose = TRUE,
                         test.use = "DESeq2",
@@ -70,7 +39,7 @@ DCT1b_NK <- FindMarkers(SO,
                         min.pct = 0.1,
                         logfc.threshold = 0.3219)
 
-DCT1c_NK <- FindMarkers(SO,
+DCT1c <- FindMarkers(SO,
                         ident.1 = "DCT1-C",
                         verbose = TRUE,
                         test.use = "DESeq2",
@@ -78,7 +47,7 @@ DCT1c_NK <- FindMarkers(SO,
                         min.pct = 0.1,
                         logfc.threshold = 0.3219)
 
-DCT1d_NK <- FindMarkers(SO,
+DCT1d <- FindMarkers(SO,
                         ident.1 = "DCT1-D",
                         verbose = TRUE,
                         test.use = "DESeq2",
@@ -90,19 +59,19 @@ DCT1d_NK <- FindMarkers(SO,
 SO <- readRDS(here("CONTROL_DCT2.rds"))
 Idents(SO) <- "subclass.l2"
 
-DCT2alpha.vs.beta_NK <- FindMarkers(SO,
-                        ident.1 = "DCT2-alpha",
+DCT2x.vs.y <- FindMarkers(SO,
+                        ident.1 = "DCT2-X",
                         verbose = TRUE,
                         test.use = "DESeq2",
                         assay = "SCT",
                         min.pct = 0.1,
                         logfc.threshold = 0.3219)
 
-# 5. Save all DEG lists -----------------------------------------------------
+# 4. Save all DEG lists -----------------------------------------------------
 # data.frame
-save(DCT1vsDCT2_NK, Prolif_NK, DCT1.kd, DCT2.kd, Prolif.kd, DCT1a_NK, DCT1b_NK, DCT1c_NK, DCT1d_NK, DCT2alpha.vs.beta_NK, file = here("ALL DEG files.RData"))
-save(DCT1vsDCT2_NK, Prolif_NK, DCT1.kd, DCT2.kd, Prolif.kd, DCT1a_NK, DCT1b_NK, DCT1c_NK, DCT1d_NK, DCT2alpha.vs.beta_NK, file = here("ALL DEG files.rds"))
+save(DCT1vsDCT2, Prolif, DCT1a, DCT1b, DCT1c, DCT1d, DCT2x.vs.y, file = here("DCT DEGs.RData"))
+save(DCT1vsDCT2, Prolif, DCT1a, DCT1b, DCT1c, DCT1d, DCT2x.vs.y, file = here("DCT DEGs.rda"))
 
 # excel file
-dataset_names <- list('DCT1vsDCT2_NK' = DCT1vsDCT2_NK, 'Prolif_NK' = Prolif_NK, 'DCT1.kd' = DCT1.kd, 'DCT2.kd' = DCT2.kd, 'Prolif.kd' = Prolif.kd, 'DCT1a_NK' = DCT1a_NK, 'DCT1b_NK' = DCT1b_NK, 'DCT1c_NK' = DCT1c_NK, 'DCT1d_NK' = DCT1d_NK, 'DCT2alpha.vs.beta_NK' = DCT2alpha.vs.beta_NK)
-write.xlsx(dataset_names, file = 'ALL DEGs.xlsx', rowNames=TRUE)
+dataset_names <- list('DCT1vsDCT2' = DCT1vsDCT2, 'Prolif' = Prolif, 'DCT1a' = DCT1a, 'DCT1b' = DCT1b, 'DCT1c' = DCT1c, 'DCT1d' = DCT1d, 'DCT2x.vs.y' = DCT2x.vs.y)
+write.xlsx(dataset_names, file = 'DCT DEGs.xlsx', rowNames=TRUE)

@@ -60,4 +60,5 @@ SO <- AddMetaData(object = SO,
                   metadata = cds@principal_graph_aux@listData$UMAP$pseudotime,
                   col.name = "Pseudotime")
 
+saveRDS(SO, file = "CONTROL_DCT.rds")
 

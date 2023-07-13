@@ -4,10 +4,10 @@ library(dplyr)
 library(tibble)
 library(clusterProfiler)
 
-# Import the 'ALL DEG files.RData' file (supplemental data from original publication) into the R Studio environment
+# Import the 'DCT DEGs.RData' file (supplemental data from original publication) into the R Studio environment
 
 # 1. Convert Gene Symbols to ENTREZ IDs ------------------------------------------------------------------
-markers <- DCT1vsDCT2_NK %>% rownames_to_column(var="SYMBOL")
+markers <- DCT1vsDCT2 %>% rownames_to_column(var="SYMBOL")
 
 ENTREZ_list <- bitr(geneID = rownames(DCT1vsDCT2_NK),
                     fromType = "SYMBOL",
