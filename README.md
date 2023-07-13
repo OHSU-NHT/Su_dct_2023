@@ -1,5 +1,5 @@
-# **Dietary potassium restriction reprograms kidney epithelial cells with adaptive and adverse systemic consequences**
-__*Xiao-Tong Su, Jeremiah Reyes, Xin-Peng Duan, Wen-Hui Wang, Anne Lackey, Yujiro Maeoka, Ryan Cornelius, Jim McCormick, Chao-Ling Yang, Hyun Jung, Paul Welling, *Jonathan Nelson, *David H. Ellison__  
+# **Enriched Single-Nucleus RNA-Sequencing reveals unique attributes of distal convoluted tubule cells**
+__*Xiao-Tong Su, Jeremiah Reyes, Anne Lackey, Yujiro Maeoka, Ryan Cornelius, Jim McCormick, Chao-Ling Yang, Hyun Jung, Paul Welling, *Jonathan Nelson, *David H. Ellison__  
 *Corresponding authors  
 
 If you use any of the code or workflows in this repository please cite our manuscript in xxx (will update).
@@ -30,8 +30,7 @@ https://ellisonlab.shinyapps.io/dct_shinycell/
 **How to use the snRNA data analysis scripts**
 1. Pre-process the aligned data and aggregate three control samples or all six samples (three control and three experimental. <br/>
 Pre-process_Step1.R <br/>
-Pre-process_Step2_CONTROL.R <br/>
-Pre-process_Step3_ALL.R <br/>
+Pre-process_Step2.R <br/>
 
 3. Analyze the aggreaged and annotated dataset <br/>
 Analysis_1_AddModuleScore.R <br/>
@@ -41,12 +40,8 @@ Analysis_4_Pseudotime.R <br/>
 Analysis_5_Pathway_analysis.R <br/>
 
 4. Make figures for the manuscript. <br/>
+Fig.1.R <br/>
+Fig.2.R <br/>
 Fig.3.R <br/>
 Fig.4.R <br/>
 Fig.5.R <br/>
-Fig.6.R <br/>
-Fig.7.R <br/>
-Fig.8.R <br/>
-Fig.9.R <br/>
-
-
