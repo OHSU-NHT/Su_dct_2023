@@ -1,391 +1,121 @@
-
 library(Seurat)
 library(dplyr)
 library(here)
 library(ggplot2)
+library(tibble)
+library(clusterProfiler)
 
-# Fig.5A-D. DCT1 subpopulation ------------------------------------------------------------------------------------------------
-# Fig.5A ----------------------------------------------------------------------------------------------------------------------
-SO <- readRDS(here("CONTROL_DCT1.rds"))
-Idents(SO) <- "subclass.l2"
-my_levels <- c("DCT1-A", "DCT1-B", "DCT1-C", "DCT1-D")
-Idents(SO) <- factor(x = Idents(SO), levels = my_levels)
+# Fig.5A-B Pathway analysis - Import the 'ALL DEG files.RData' file (supplemental data from original publication) into the R Studio environment
+# Convert Gene Symbols to ENTREZ IDs
+markers <- DCT1vsDCT2_NK %>% rownames_to_column(var="SYMBOL")
 
-mycols.DCT1.sub <- c("#56ba5a", # DCT1-A
-                     "#52b7bd", # DCT1-B
-                     "#A8D8B5", # DCT1-C
-                     "#4d8185") # DCT1-D
-                     
-DimPlot(SO,
-        reduction = "umap",
-        label = TRUE,
-        pt.size = 0,
-        label.size = 6,
-        cols = mycols.DCT1.sub) +
-  NoLegend()
+ENTREZ_list <- bitr(geneID = rownames(DCT1vsDCT2_NK),
+                    fromType = "SYMBOL",
+                    toType = "ENTREZID",
+                    OrgDb = "org.Mm.eg.db"
+)
+
+markers <-  ENTREZ_list %>% inner_join(markers, by = "SYMBOL")
+
+# Remove genes that are not statistically significant 
+markers <-  markers %>% dplyr::filter(p_val_adj < 0.05)
+head(markers, n = 50)
+
+# Fig.5A DCT1 pathways ----------------------------------------------------------------------------------
+
+# Up-regulated Genes (DCT1-enriched) = markers with positive fold change values 
+pos.markers <-  markers %>% dplyr::filter(avg_log2FC > 0) %>%  arrange(desc(abs(avg_log2FC)))
+head(pos.markers, n = 50)
+pos.ranks <- pos.markers$ENTREZID[abs(markers$avg_log2FC) > 0.3219]
+head(pos.ranks)
+
+# GO - Biological Processes 
+pos_go.BP <- enrichGO(pos.ranks,
+                      OrgDb = "org.Mm.eg.db",
+                      ont ="BP",
+                      readable=TRUE)
+
+# Figure 5A - barplot of DCT1-enriched pathway
+df.pos_go.BP <- data.frame(GO_Biological_Process = pos_go.BP@result$Description,
+                           Count = pos_go.BP@result$Count,
+                           Pvalue = pos_go.BP@result$p.adjust)
+df.pos_go.BP <- df.pos_go.BP[order(df.pos_go.BP[,"Count"], decreasing = TRUE),]
+df.pos_go.BP$observation <- 1:nrow(df.pos_go.BP)
+df.pos_go.BP <- df.pos_go.BP %>% mutate(highlight = dplyr::case_when(observation <=36 ~ "Yes",
+                                                                     TRUE ~ "No"))
+top80 <- df.pos_go.BP %>% top_n(80, Count)
+
+ggplot(top80, aes(x = reorder(GO_Biological_Process, observation, decreasing = FALSE),
+                  y = Count,
+                  fill = highlight
+)) +
+  geom_bar(stat = "identity",
+           width = 1) +
+  scale_fill_manual(values=c("#999999", "royal blue")) +
+  ylab("Gene Count") +
+  xlab("GO Biological Process") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   vjust = 1.5,
+                                   size = 15),
+        axis.text.y = element_text(size = 15))
 
 ggsave(
   "F5A.tiff",
   device = "tiff",
   plot = last_plot(),
-  width = 4,
-  height = 3,
+  width = 4.5,
+  height = 10,
   units = c("in"),
   dpi = 700,
   compression = 'lzw'
 )
 
-# Fig.5B ----------------------------------------------------------------------------------------------------------------------
-SO <- PrepSCTFindMarkers(SO, verbose = TRUE)
-ALL.markers.DCT1.sub <- FindAllMarkers(SO, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-ALL.markers.DCT1.sub %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
-top5 <- ALL.markers.DCT1.sub %>% group_by(cluster) %>% top_n(5, avg_log2FC)
+# Fig.5B DCT2 pathways ----------------------------------------------------------------------------------
 
-DotPlot(SO,
-        features = unique(top5$gene),
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  RotatedAxis() +
-  scale_y_discrete(limits = c("DCT1-D", "DCT1-C", "DCT1-B", "DCT1-A"))
+# Down-regulated Genes (DCT2-enriched) = markers with positive fold change values 
+neg.markers <-  markers %>% dplyr::filter(avg_log2FC < 0) %>%  arrange(desc(abs(avg_log2FC)))
+head(neg.markers, n = 50)
+neg.ranks <- neg.markers$ENTREZID[abs(markers$avg_log2FC) > 0.3219]
+head(neg.ranks)
+
+# GO - Biological Processes 
+neg_go.BP <- enrichGO(neg.ranks,
+                      OrgDb = "org.Mm.eg.db",
+                      ont ="BP",
+                      readable=TRUE)
+
+# Figure 5B - barplot of DCT2-enriched pathway
+df.neg_go.BP <- data.frame(GO_Biological_Process = neg_go.BP@result$Description,
+                           Count = neg_go.BP@result$Count,
+                           Pvalue = neg_go.BP@result$p.adjust)
+df.neg_go.BP <- df.neg_go.BP[order(df.neg_go.BP[,"Count"], decreasing = TRUE),]
+df.neg_go.BP$observation <- 1:nrow(df.neg_go.BP)
+df.neg_go.BP <- df.neg_go.BP %>% mutate(highlight = dplyr::case_when(observation <= 30 ~ "Yes",
+                                                                     TRUE ~ "No"))
+top80 <- df.neg_go.BP %>% top_n(80, Count)
+
+ggplot(top80, aes(x = reorder(GO_Biological_Process, observation, decreasing = FALSE),
+                  y = Count,
+                  fill = highlight
+)) +
+  geom_bar(stat = "identity",
+           width = 1) +
+  scale_fill_manual(values=c("#999999", "royal blue")) +
+  ylab("Gene Count") +
+  xlab("GO Biological Process") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   vjust = 1.5,
+                                   size = 15),
+        axis.text.y = element_text(size = 15))
 
 ggsave(
   "F5B.tiff",
   device = "tiff",
   plot = last_plot(),
-  width = 6.8,
-  height = 3.3,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-# Fig.5C ----------------------------------------------------------------------------------------------------------------------
-Mg.markers <- c("Slc41a3", "Prox1", "Umod", "Cnnm2", "Fxyd2", "Egf", "Trpm6", "Trpm7")
-DotPlot(SO,
-        features = Mg.markers,
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis() +
-  ggtitle("Magnesium") 
-
-ggsave(
-  "F5C_1.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 4,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-Ca.markers <- c ("Ryr2", "Trpv5", "S100g", "Vdr", "Calb1", "Slc8a1")
-DotPlot(SO,
-        features = Ca.markers,
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis() +
-  ggtitle("Calcium")
-
-ggsave(
-  "F5C_2.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 4,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-Na.markers <- c("Hsd11b2", "Scnn1g", "Scnn1b", "Scnn1a", "Klk1", "Nr3c2", "Stk39", "Klhl3", "Wnk4", "Wnk1", "Slc12a3")
-DotPlot(SO,
-        features = Na.markers,
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis() +
-  ggtitle("Sodium")
-
-ggsave(
-  "F5C_3.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 4,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-# Fig.5D ----------------------------------------------------------------------------------------------------------------------
-DotPlot(SO,
-        features = c("Hoxb7", "Hoxd10", "Emx1", "Sall3"),
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis()
-
-ggsave(
-  "F5D_1.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 2,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-DotPlot(SO,
-        features = c("Hoxb7", "Hoxd10"),
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis()
-
-ggsave(
-  "F5D_2.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 1.5,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-# Fig.5E-H. DCT2 subpopulation ------------------------------------------------------------------------------------------------
-# Fig.5E ----------------------------------------------------------------------------------------------------------------------
-SO <- readRDS(here("CONTROL_DCT2.rds"))
-Idents(SO) <- "subclass.l2"
-
-
-mycols.DCT2.sub <- c("#CC79A7", # DCT2-X
-                     "#D55E00") # DCT2-Y
-                              
-DimPlot(SO,
-        reduction = "umap",
-        label = TRUE,
-        pt.size = 0,
-        label.size = 6,
-        cols = mycols.DCT2.sub) +
-  NoLegend()
-
-ggsave(
-  "F5E.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 3,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-# Fig.5F ----------------------------------------------------------------------------------------------------------------------
-SO <- PrepSCTFindMarkers(SO, verbose = TRUE)
-ALL.markers.DCT2.sub <- FindAllMarkers(SO, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-ALL.markers.DCT2.sub %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
-top5 <- ALL.markers.DCT2.sub %>% group_by(cluster) %>% top_n(5, avg_log2FC)
-
-DotPlot(SO,
-        features = unique(top5$gene),
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  RotatedAxis() +
-  scale_y_discrete(limits = c("DCT2-Y", "DCT2-X"))
-
-ggsave(
-  "F5F.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 6,
-  height = 3.3,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-# Fig.5G ----------------------------------------------------------------------------------------------------------------------
-Mg.markers <- c("Slc41a3", "Prox1", "Umod", "Cnnm2", "Fxyd2", "Egf", "Trpm6", "Trpm7")
-DotPlot(SO,
-        features = Mg.markers,
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis() +
-  ggtitle("Magnesium") 
-
-ggsave(
-  "F5G_1.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 4,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-Ca.markers <- c ("Ryr2", "Trpv5", "S100g", "Vdr", "Calb1", "Slc8a1")
-DotPlot(SO,
-        features = Ca.markers,
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis() +
-  ggtitle("Calcium")
-
-ggsave(
-  "F5G_2.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 4,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-Na.markers <- c("Hsd11b2", "Scnn1g", "Scnn1b", "Scnn1a", "Klk1", "Nr3c2", "Stk39", "Klhl3", "Wnk4", "Wnk1", "Slc12a3")
-DotPlot(SO,
-        features = Na.markers,
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        scale.max = 100,
-        scale.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  theme(axis.text.x = element_text(),
-        axis.title = element_blank(),
-        plot.title = element_text(hjust = 0.5)) + 
-  coord_flip() + 
-  RotatedAxis() +
-  ggtitle("Sodium")
-
-ggsave(
-  "F5G_3.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 4,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-# Fig.5H ----------------------------------------------------------------------------------------------------------------------
-DotPlot(SO,
-        features = c("Hoxb7", "Hoxd10", "Emx1", "Sall3"), 
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  coord_flip() + 
-  RotatedAxis() + 
-  theme(axis.title = element_blank())
-
-ggsave(
-  "F5H_1.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 2,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-DotPlot(SO,
-        features = c("Hoxb7", "Hoxd10"), 
-        cols = c("light grey", "royal blue"),
-        dot.scale = 8,
-        dot.min = 0,
-        col.min = -2.5,
-        col.max = 2.5) + 
-  coord_flip() + 
-  RotatedAxis() + 
-  theme(axis.title = element_blank())
-
-ggsave(
-  "F5H_2.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 1.5,
+  width = 4.5,
+  height = 11,
   units = c("in"),
   dpi = 700,
   compression = 'lzw'

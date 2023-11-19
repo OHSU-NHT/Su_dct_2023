@@ -727,65 +727,13 @@ saveRDS(cyc.markers, here("cycDCT_kpmp.dct.rda"))
 
 # Fig.4F -------------------------------------------------------------------------------------------------------------------------
 x <- DCT.markers
+x <- x %>%
+  filter(abs(avg_log2FC) > 0.3219, p_val_adj <= 0.05)
 x2 <- "Average log2FC KPMP"
+
 y <- DCT1vsDCT2
-y2 <- "Average log2FC Mouse"
-
-x_tb <- x %>%
-  data.frame() %>%
-  rownames_to_column(var="gene") %>% 
-  as_tibble()
-
-y_tb <- y %>%
-  data.frame() %>%
-  rownames_to_column(var="gene") %>% 
-  as_tibble()
-
-# convert mouse gene to human gene
-y_tb <- mousegnameConverter(y_tb, "gene")
-
-# Tables combined
-z <- inner_join(x_tb, y_tb, by = "gene")
-
-#Coorelation plot
-rsqrd = lm(avg_log2FC.x~avg_log2FC.y, data=z)
-r2 <- summary(rsqrd)$r.squared
-
-r2
-
-genes.to.label <- c("ARL15", "SLC8A1", "CALB1", "CASR",  "TRPM7", "EGF", "UMOD", "ERBB4", "SLC2A9", "TRPM6", "TRPV5", "KLK1")
-df.label <- subset(z, gene %in% genes.to.label)
-
-ggplot(z, aes(x = avg_log2FC.x, y = avg_log2FC.y, label=gene)) +
-  theme_bw() +
-  geom_point(color=dplyr::case_when((z$p_val_adj.x < 0.01 & z$p_val_adj.y < 0.01) ~ "#21918c",
-                                    TRUE ~ "gray")) +
-  geom_text_repel(data=df.label,
-                  segment.size  = 0.2,
-                  segment.color = "grey50") +
-  geom_smooth (method=lm) +
-  labs(x = x2, y = y2) +
-  stat_poly_eq(aes(label = paste(..rr.label.., sep = "~~~")),   # R square
-               label.x.npc = "left", label.y.npc = 0.90,
-               rr.digits = 3) +
-  xlim(-3, 3) +
-  ylim(-4, 4)
-
-ggsave(
-  "F4F.tiff",
-  device = "tiff",
-  plot = last_plot(),
-  width = 4,
-  height = 3,
-  units = c("in"),
-  dpi = 700,
-  compression = 'lzw'
-)
-
-# Fig.4G -------------------------------------------------------------------------------------------------------------------------
-x <- cyc.markers
-x2 <- "Average log2FC kpmp"
-y <- Prolif
+y <- y %>%
+  filter(abs(avg_log2FC) > 0.3219, p_val_adj <= 0.05)
 y2 <- "Average log2FC Mouse"
 
 x_tb <- x %>%
@@ -805,40 +753,96 @@ y_tb <- mousegnameConverter(y_tb, "gene")
 z <- inner_join(x_tb, y_tb, by = "gene")
 
 #Correlation plot
-rsqrd = lm(avg_log2FC.x~avg_log2FC.y, data=z)
-r2 <- summary(rsqrd)$r.squared
-
+stat = lm(avg_log2FC.x~avg_log2FC.y, data=z)
+r2 <- summary(stat)$r.squared
 r2
+
+p <- summary(stat)$coefficients[2, 4]
+p <- format.pval(p, digits = 3)
+p
+
+ggplot(z, aes(x = avg_log2FC.x, y = avg_log2FC.y, label=gene)) +
+  theme_bw() +
+  geom_point(color=dplyr::case_when((z$p_val_adj.x < 0.01 & z$p_val_adj.y < 0.01) ~ "#21918c",
+                                    TRUE ~ "gray")) +
+  geom_text_repel(segment.size  = 0.2,
+                  segment.color = "grey50") +
+  geom_smooth (method=lm) +
+  labs(x = x2, y = y2) +
+  xlim(-3, 3) +
+  ylim(-4, 4) +
+  annotate("text", x = -0.5, y = 3.9, label = paste("R-squared: ", round(r2, 4), ", p-value: ", format(p, scientific = FALSE)), size = 4)
+
+ggsave(
+  "F4F.tiff",
+  device = "tiff",
+  plot = last_plot(),
+  width = 5,
+  height = 4,
+  units = c("in"),
+  dpi = 700,
+  compression = 'lzw'
+)
+
+# Fig.4G -------------------------------------------------------------------------------------------------------------------------
+x <- cyc.markers
+x <- x %>%
+  filter(abs(avg_log2FC) > 0.3219, p_val_adj <= 0.05)
+x2 <- "Average log2FC kpmp"
+
+y <- Prolif
+y <- y %>%
+  filter(abs(avg_log2FC) > 0.3219, p_val_adj <= 0.05)
+y2 <- "Average log2FC Mouse"
+
+x_tb <- x %>%
+  data.frame() %>%
+  rownames_to_column(var="gene") %>% 
+  as_tibble()
+
+y_tb <- y %>%
+  data.frame() %>%
+  rownames_to_column(var="gene") %>% 
+  as_tibble()
+
+# convert mouse gene to human gene
+y_tb <- mousegnameConverter(y_tb, "gene")
+
+# Tables combined
+z <- inner_join(x_tb, y_tb, by = "gene")
+
+#Correlation plot
+stat = lm(avg_log2FC.x~avg_log2FC.y, data=z)
+r2 <- summary(stat)$r.squared
+r2
+
+p <- summary(stat)$coefficients[2, 4]
+p <- format.pval(p, digits = 3)
+p
 
 #Set Range for Far Right Data Points
 df.upper <- subset(z, avg_log2FC.x > 0.4 & avg_log2FC.y > 0.4)
 #Set Range for Far Left Data Points
 df.lower <- subset(z, avg_log2FC.x < -0.4 & avg_log2FC.y < -0.4)
 
-genes.to.label <- c("TOP2A", "CENPP", "DIAPH3", "CENPF",  "EZH2", "NAV2", "FXYD2", "ATP1A1", "UMOD", "TRPM6", "SLC12A3", "EGF")
-df.label <- subset(z, gene %in% genes.to.label)
-
 ggplot(z, aes(x = avg_log2FC.x, y = avg_log2FC.y, label=gene)) +
   theme_bw() +
   geom_point(color=dplyr::case_when((z$p_val_adj.x < 0.01 & z$p_val_adj.y < 0.01) ~ "#21918c",
                                     TRUE ~ "gray")) +
-  geom_text_repel(data=df.label,
-                  segment.size  = 0.2,
+  geom_text_repel(segment.size  = 0.2,
                   segment.color = "grey50") +
   geom_smooth (method=lm) +
   labs(x = x2, y = y2) +
-  stat_poly_eq(aes(label = paste(..rr.label.., sep = "~~~")),   # R square
-               label.x.npc = "left", label.y.npc = 0.90,
-               rr.digits = 3) +
-  xlim(-2.5, 2.5) +
-  ylim(-2.5, 2.5)
+  xlim(-2, 2) +
+  ylim(-2.5, 2.5) +
+  annotate("text", x = -0.5, y = 2.5, label = paste("R-squared: ", round(r2, 4), ", p-value: ", format(p, scientific = FALSE)), size = 4)
 
 ggsave(
   "F4G.tiff",
   device = "tiff",
   plot = last_plot(),
-  width = 4,
-  height = 3,
+  width = 5,
+  height = 4,
   units = c("in"),
   dpi = 700,
   compression = 'lzw'
