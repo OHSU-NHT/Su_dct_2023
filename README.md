@@ -1,5 +1,5 @@
 # **Enriched Single-Nucleus RNA-Sequencing reveals unique attributes of distal convoluted tubule cells**
-__*Xiao-Tong Su, Jeremiah Reyes, Anne Lackey, Yujiro Maeoka, Ryan Cornelius, Jim McCormick, Chao-Ling Yang, Hyun Jung, Paul Welling, *Jonathan Nelson, *David H. Ellison__  
+__*Xiao-Tong Su, Jeremiah V. Reyes, Anne Lackey, Hasan Demirci, Sebastian Bachmann, Yujiro Maeoka, Ryan J. Cornelius, James A. McCormick, Chao-Ling Yang, Hyun Jun Jung, Paul A. Welling, *Jonathan W. Nelson, *David H. Ellison__  
 *Corresponding authors  
 
 If you use any of the code or workflows in this repository please cite our manuscript in xxx (will update).
