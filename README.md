@@ -2,7 +2,8 @@
 __*Xiao-Tong Su, Jeremiah V. Reyes, Anne Lackey, Hasan Demirci, Sebastian Bachmann, Yujiro Maeoka, Ryan J. Cornelius, James A. McCormick, Chao-Ling Yang, Hyun Jun Jung, Paul A. Welling, *Jonathan W. Nelson, *David H. Ellison__  
 *Corresponding authors  
 
-If you use any of the code or workflows in this repository please cite our manuscript in xxx (will update).
+If you use any of the code or workflows in this repository please cite our manuscript in PMID: 38238903. </br>
+https://pubmed.ncbi.nlm.nih.gov/38238903/
 
 Single cell sequencing data generated for this manuscript and finalized R objects can be downloaded in GEO. </br>
 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE228367
